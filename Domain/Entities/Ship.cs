@@ -18,19 +18,5 @@ namespace Domain.Entities
         public virtual ICollection<Field> Fields { get; set; }
 
         public int PlayerId { get; set; }
-
-
-        //protected void InitializeFields()
-        //{
-        //    for (int i = 0; i < Length; i++)
-        //    {
-        //        Fields.Add(new Field()
-        //        {
-        //            X_Position = null,
-        //            Y_Position = null,
-        //            Status = 0
-        //        });
-        //    }
-        //}
     }
 }

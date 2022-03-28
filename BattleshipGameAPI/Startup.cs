@@ -1,3 +1,4 @@
+using BattleshipGameAPI.Services;
 using Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,6 +26,7 @@ namespace BattleshipGameAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddScoped<IGameService, GameService>();
             services.AddDbContext<BattleshipGameDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("BattleshipGameCS")));
         }
 
