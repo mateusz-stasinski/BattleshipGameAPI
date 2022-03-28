@@ -36,7 +36,7 @@ namespace BattleshipGameAPI.Controllers
         public async Task<IActionResult> StartNewGame([FromBody] StartNewGameRequest request)
         {
             var game = new Game();
-            game.StartNewGame(request.FirstPlayerName, request.SecondPlayerName);
+            game.StartNewGame(request.FirstPlayerName, request.SecondPlayerName, request.XSize, request.YSize);
 
             _context.Add(game);
             await _context.SaveChangesAsync();

@@ -14,15 +14,15 @@ namespace Domain.Entities
 
         public virtual ICollection<Player> Players { get; set; }
 
-        public void StartNewGame(string firstPlayerName, string secondPlayerName)
+        public void StartNewGame(string firstPlayerName, string secondPlayerName, int xSize, int ySize)
         {
             IsEnded = false;
             WinnerId = null;
 
 
-            Player firstPlayer = AddPlayer(firstPlayerName);
+            Player firstPlayer = AddPlayer(firstPlayerName, xSize, ySize);
 
-            Player secondPlayer = AddPlayer(secondPlayerName);
+            Player secondPlayer = AddPlayer(secondPlayerName, xSize, ySize);
 
 
             Players = new List<Player>()
@@ -34,7 +34,7 @@ namespace Domain.Entities
             
         }
 
-        private Player AddPlayer(string name)
+        private Player AddPlayer(string name, int xSize, int ySize)
         {
             var player = new Player()
             {
@@ -51,7 +51,7 @@ namespace Domain.Entities
                     new Submarine()
                 }
             };
-            player.Board.InitializeFields(10, 10);
+            player.Board.InitializeFields(xSize, ySize);
 
             return player;
         }
@@ -65,7 +65,7 @@ namespace Domain.Entities
 
             var shipFieldsAmount = 0;
 
-            while (shipFieldsAmount <= ship.Length)
+            while (shipFieldsAmount < ship.Length)
             {
                 Direction direction = (Direction)randomDirection.Next(1, 3);
 
@@ -80,6 +80,12 @@ namespace Domain.Entities
 
                         if (field.Status != FieldStatus.Empty)
                         {
+                            for (int j = xPosition; j < i; j++)
+                            {
+                                var fieldToClean = board.Fields.Single(f => f.X_Position == j && f.Y_Position == yPosition);
+                                fieldToClean.ShipId = null;
+                                fieldToClean.Status = FieldStatus.Empty;
+                            }
                             break;
                         }
 
@@ -98,6 +104,12 @@ namespace Domain.Entities
 
                         if (field.Status != FieldStatus.Empty)
                         {
+                            for (int j = yPosition; j < i; j++)
+                            {
+                                var fieldToClean = board.Fields.Single(f => f.X_Position == xPosition && f.Y_Position == j);
+                                fieldToClean.ShipId = null;
+                                fieldToClean.Status = FieldStatus.Empty;
+                            }
                             break;
                         }
 
