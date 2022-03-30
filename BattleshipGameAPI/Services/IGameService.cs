@@ -8,5 +8,6 @@ namespace BattleshipGameAPI.Services
     {
         public Task<GameDto> StartNewGame(StartNewGameRequest request);
         public Task<GameDto> ContinueGame(int gameId);
+        public Task<PlayerDto> Shoot(ShootRequest request);
     }
 }

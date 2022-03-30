@@ -16,6 +16,7 @@ namespace BattleshipGameAPI
 {
     public class Startup
     {
+        private readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration)
         {
@@ -25,6 +26,18 @@ namespace BattleshipGameAPI
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                    builder =>
+                    {
+                        builder
+                            .AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowAnyMethod();
+                    });
+            });
             services.AddControllers();
             services.AddScoped<IGameService, GameService>();
             services.AddDbContext<BattleshipGameDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("BattleshipGameCS")));
@@ -39,6 +52,7 @@ namespace BattleshipGameAPI
             }
 
             app.UseRouting();
+            app.UseCors(MyAllowSpecificOrigins);
 
             app.UseEndpoints(endpoints =>
             {

@@ -9,8 +9,8 @@ namespace Domain.Entities
     public class Field
     {
         public Guid Id { get; set; }
-        public int X_Position { get; set; }
         public int Y_Position { get; set; }
+        public int X_Position { get; set; }
         public FieldStatus Status { get; set; }
 
         public int? ShipId { get; set; }

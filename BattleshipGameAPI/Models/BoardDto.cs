@@ -9,6 +9,11 @@ namespace BattleshipGameAPI.Models
         public int X_Size { get; set; }
         public int Y_Size { get; set; }
 
+        public ICollection<BoardRow> Rows { get; set; }
+    }
+
+    public class BoardRow
+    {
         public ICollection<FieldDto> Fields { get; set; }
     }
 }

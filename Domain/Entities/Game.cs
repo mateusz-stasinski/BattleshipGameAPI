@@ -24,14 +24,11 @@ namespace Domain.Entities
 
             Player secondPlayer = AddPlayer(secondPlayerName, xSize, ySize);
 
-
             Players = new List<Player>()
             {
                 firstPlayer,
                 secondPlayer
             };
-
-            
         }
 
         private Player AddPlayer(string name, int xSize, int ySize)

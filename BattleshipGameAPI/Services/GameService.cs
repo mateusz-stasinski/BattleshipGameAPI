@@ -46,21 +46,31 @@ namespace BattleshipGameAPI.Services
                         PlayerId = player.Id,
                         X_Size = player.Board.X_Size,
                         Y_Size = player.Board.Y_Size,
-                        Fields = new List<FieldDto>()
+                        Rows = new List<BoardRow>()
                     },
                     Ships = new List<ShipDto>()
                 };
 
-                foreach (var field in player.Board.Fields)
+                for (int i = 0; i < player.Board.Y_Size; i++)
                 {
-                    playerDto.Board.Fields.Add(new FieldDto
+                    var row = new BoardRow();
+                    row.Fields = new List<FieldDto>();
+
+                    for (int j = 0; j < player.Board.X_Size; j++)
                     {
-                        X_Position = field.X_Position,
-                        Y_Position = field.Y_Position,
-                        Status = field.Status,
-                        ShipId = field.ShipId,
-                        BoardId = field.BoardId
-                    });
+                        var field = player.Board.Fields.Single(f => f.X_Position == j + 1 && f.Y_Position == i + 1);
+
+                        row.Fields.Add(new FieldDto
+                        {
+                            X_Position = field.X_Position,
+                            Y_Position = field.Y_Position,
+                            Status = field.Status,
+                            ShipId = field.ShipId,
+                            BoardId = field.BoardId
+                        });
+                    }
+
+                    playerDto.Board.Rows.Add(row);
                 }
 
                 foreach (var ship in player.Ships)
@@ -120,6 +130,78 @@ namespace BattleshipGameAPI.Services
             var gameDto = await ContinueGame(game.Id);
 
             return gameDto;
+        }
+
+        public async Task<PlayerDto> Shoot(ShootRequest request)
+        {
+            //Sprawdzić, czy gracz, który strzela to ten do którego jest kolej
+
+            var player = await _context.Players
+                .Include(p => p.Board)
+                .ThenInclude(b => b.Fields)
+                .Include(p => p.Ships)
+                .ThenInclude(b => b.Fields)
+                .SingleAsync(p => p.Id == request.AttackedPlayerId);
+            var board = player.Board;
+            var field = board.Fields.Single(f => f.X_Position == request.X_Position && f.Y_Position == request.Y_Position);
+
+            if (field.Status == FieldStatus.Empty) 
+            { 
+                return null;
+            }
+
+            if (field.Status == FieldStatus.Filled)
+            {
+                var ship = player.Ships.Single(s => s.Id == field.ShipId);
+                int hitFieldsCounter = 1;
+
+                //Sprawdzenie czy statek hit and sink
+                foreach (var shipField in ship.Fields)
+                {
+                    if (field.Status == FieldStatus.Hit)
+                    {
+                        hitFieldsCounter++;
+                    }
+                }
+
+                if (hitFieldsCounter == ship.Fields.Count())
+                {
+                    foreach (var shipField in ship.Fields)
+                    {
+                        field.Status = FieldStatus.HitAndSink;
+                    }
+
+
+                    //Sprawdzanie czy koniec gry
+                    int hitAndSinkFieldsCounter = 0;
+                    int shipFieldsCounter = 0
+                    foreach (var playerShip in player.Ships)
+                    {
+                        foreach(var shipField in playerShip.Fields)
+                        {
+                            if (shipField.Status != FieldStatus.HitAndSink)
+                            {
+                                hitAndSinkFieldsCounter++;
+                            }
+                            shipFieldsCounter++;
+                        }
+                    }
+
+                    //Zakończenie gry
+                    if (hitAndSinkFieldsCounter == shipFieldsCounter)
+                    {
+
+                    }
+                }
+                else
+                {
+                    field.Status = FieldStatus.Hit;
+                }
+
+                player.Score++;
+
+            }
+            return null;
         }
     }
 }

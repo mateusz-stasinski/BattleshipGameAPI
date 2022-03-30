@@ -2,8 +2,8 @@
 {
     public class FieldDto
     {
-        public int X_Position { get; set; }
         public int Y_Position { get; set; }
+        public int X_Position { get; set; }
         public Domain.Entities.FieldStatus Status { get; set; }
 
         public int? ShipId { get; set; }
