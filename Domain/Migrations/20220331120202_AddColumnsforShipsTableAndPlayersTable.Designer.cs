@@ -4,14 +4,16 @@ using Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Domain.Migrations
 {
     [DbContext(typeof(BattleshipGameDbContext))]
-    partial class BattleshipGameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220331120202_AddColumnsforShipsTableAndPlayersTable")]
+    partial class AddColumnsforShipsTableAndPlayersTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,10 +103,10 @@ namespace Domain.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsMyOpponentMove")
+                    b.Property<bool?>("IsWinner")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("IsWinner")
+                    b.Property<bool>("IsYourMove")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")

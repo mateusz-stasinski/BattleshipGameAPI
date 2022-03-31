@@ -22,7 +22,6 @@ namespace Domain.Entities
     {
         Empty = 0,
         Filled = 1,
-        Hit = 3,
-        HitAndSink = 4
+        Hit = 2,
     }
 }

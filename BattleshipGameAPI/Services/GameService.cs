@@ -18,13 +18,11 @@ namespace BattleshipGameAPI.Services
 
         public async Task<GameDto> ContinueGame(int gameId)
         {
-            var game = await _context.Games
-                .Include(g => g.Players)
-                .ThenInclude(p => p.Ships)
-                .Include(g => g.Players)
-                .ThenInclude(p => p.Board)
-                .ThenInclude(b => b.Fields.OrderBy(f => f.Y_Position).ThenBy(f => f.X_Position))
-                .SingleOrDefaultAsync(g => g.Id == gameId);
+            var game = await getGame(gameId);
+            if (game == null)
+            {
+                return null;
+            }
 
             var gameDto = new GameDto();
 
@@ -40,6 +38,7 @@ namespace BattleshipGameAPI.Services
                     Name = player.Name,
                     Score = player.Score,
                     IsWinner = player.IsWinner,
+                    IsMyOpponentMove = player.IsMyOpponentMove,
                     Board = new BoardDto()
                     {
                         Id = player.Board.Id,
@@ -81,6 +80,7 @@ namespace BattleshipGameAPI.Services
                         Name = ship.Name,
                         Length = ship.Length,
                         PlayerId = ship.PlayerId,
+                        IsSunk = ship.IsSunk,
                         Fields = new List<FieldDto>()
                     };
 
@@ -132,76 +132,127 @@ namespace BattleshipGameAPI.Services
             return gameDto;
         }
 
-        public async Task<PlayerDto> Shoot(ShootRequest request)
+        public async Task<ShootResponse> Shoot(ShootRequest request)
         {
-            //Sprawdzić, czy gracz, który strzela to ten do którego jest kolej
+            var game = await getGame(request.GameId);
 
-            var player = await _context.Players
-                .Include(p => p.Board)
-                .ThenInclude(b => b.Fields)
-                .Include(p => p.Ships)
-                .ThenInclude(b => b.Fields)
-                .SingleAsync(p => p.Id == request.AttackedPlayerId);
-            var board = player.Board;
+            var response = new ShootResponse();
+
+            var attackedPlayer = game.Players.Single(p => p.Id == request.AttackedPlayerId);
+            var board = attackedPlayer.Board;
             var field = board.Fields.Single(f => f.X_Position == request.X_Position && f.Y_Position == request.Y_Position);
 
-            if (field.Status == FieldStatus.Empty) 
-            { 
+            if (!attackedPlayer.IsMyOpponentMove)
+            {
                 return null;
+            }
+
+            attackedPlayer.IsMyOpponentMove = false;
+
+            var shootingPlayer = game.Players.First(p => p.Id != request.AttackedPlayerId);
+            shootingPlayer.IsMyOpponentMove = true;
+            
+
+            await _context.SaveChangesAsync();
+
+            if (field.Status == FieldStatus.Empty) 
+            {
+                response.IsHit = false;
+                response.IsSunk = false;
+                response.IsGameOver = game.IsEnded;
             }
 
             if (field.Status == FieldStatus.Filled)
             {
-                var ship = player.Ships.Single(s => s.Id == field.ShipId);
-                int hitFieldsCounter = 1;
+                shootingPlayer.Score++;
+                field.Status = FieldStatus.Hit;
+                var ship = attackedPlayer.Ships.Single(s => s.Id == field.ShipId);
 
                 //Sprawdzenie czy statek hit and sink
+                int hitFieldsCounter = 0;
                 foreach (var shipField in ship.Fields)
                 {
-                    if (field.Status == FieldStatus.Hit)
+                    if (shipField.Status == FieldStatus.Hit)
                     {
                         hitFieldsCounter++;
                     }
                 }
 
+                //Statek nie jest zatopiony
+                if (hitFieldsCounter != ship.Fields.Count())
+                {
+                    response.IsHit = true;
+                    response.IsSunk = ship.IsSunk;
+                    response.IsGameOver = game.IsEnded;
+                }
+
+                //Statek jest zatopiony
                 if (hitFieldsCounter == ship.Fields.Count())
                 {
-                    foreach (var shipField in ship.Fields)
-                    {
-                        field.Status = FieldStatus.HitAndSink;
-                    }
+                    ship.IsSunk = true;
 
 
                     //Sprawdzanie czy koniec gry
-                    int hitAndSinkFieldsCounter = 0;
-                    int shipFieldsCounter = 0
-                    foreach (var playerShip in player.Ships)
+                    int sunkShipsCounter = 0;
+                    foreach (var playerShip in attackedPlayer.Ships)
                     {
-                        foreach(var shipField in playerShip.Fields)
+                        if (playerShip.IsSunk)
                         {
-                            if (shipField.Status != FieldStatus.HitAndSink)
-                            {
-                                hitAndSinkFieldsCounter++;
-                            }
-                            shipFieldsCounter++;
+                            sunkShipsCounter++;
                         }
                     }
 
-                    //Zakończenie gry
-                    if (hitAndSinkFieldsCounter == shipFieldsCounter)
+                    //Kontynuacja gry
+                    if (sunkShipsCounter != attackedPlayer.Ships.Count())
                     {
+                        response.IsHit = true;
+                        response.IsSunk = ship.IsSunk;
+                        response.IsGameOver = game.IsEnded;
+                    }
 
+                    //Zakończenie gry
+                    if (sunkShipsCounter == attackedPlayer.Ships.Count())
+                    {
+                        game.IsEnded = true;
+                        shootingPlayer.IsWinner = true;
+                       
+                        response.IsHit = true;
+                        response.IsSunk = ship.IsSunk;
+                        response.IsGameOver = game.IsEnded;
                     }
                 }
-                else
-                {
-                    field.Status = FieldStatus.Hit;
-                }
 
-                player.Score++;
-
+                await _context.SaveChangesAsync();
             }
-            return null;
+            return response;
+        }
+
+        private async Task<Game> getGame(int gameId)
+        {
+            var game =  await _context.Games
+                .Include(g => g.Players)
+                .ThenInclude(p => p.Ships)
+                .Include(g => g.Players)
+                .ThenInclude(p => p.Board)
+                .ThenInclude(b => b.Fields.OrderBy(f => f.Y_Position).ThenBy(f => f.X_Position))
+                .SingleOrDefaultAsync(g => g.Id == gameId);
+            if (game == null)
+            {
+                return null;
+            }
+
+            return game;
+        }
+
+        private bool CheckShootingPlayer(Game game, int attackedPlayerId)
+        {
+            var player = game.Players.Single(p => p.Id == attackedPlayerId);
+
+            if (player.IsMyOpponentMove)
+            {
+                return true;
+            }
+            else { return false; }
         }
     }
 }

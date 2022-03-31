@@ -16,6 +16,7 @@ namespace Domain.Entities
         public int Length { get; set; }
 
         public virtual ICollection<Field> Fields { get; set; }
+        public bool IsSunk { get; set; }
 
         public int PlayerId { get; set; }
     }

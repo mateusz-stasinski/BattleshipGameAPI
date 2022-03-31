@@ -21,8 +21,8 @@ namespace Domain.Entities
 
 
             Player firstPlayer = AddPlayer(firstPlayerName, xSize, ySize);
-
             Player secondPlayer = AddPlayer(secondPlayerName, xSize, ySize);
+            secondPlayer.IsMyOpponentMove = true;
 
             Players = new List<Player>()
             {

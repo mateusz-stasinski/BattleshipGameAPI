@@ -12,6 +12,7 @@ namespace Domain.Entities
         public string Name { get; set; }
         public int Score { get; set; }
         public bool? IsWinner { get; set; }
+        public bool IsMyOpponentMove { get; set; }
 
         public int GameId { get; set; }
 
