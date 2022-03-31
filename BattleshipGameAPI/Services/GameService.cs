@@ -215,6 +215,8 @@ namespace BattleshipGameAPI.Services
                     {
                         game.IsEnded = true;
                         shootingPlayer.IsWinner = true;
+                        shootingPlayer.IsMyOpponentMove = false;
+                        attackedPlayer.IsMyOpponentMove = false;
                        
                         response.IsHit = true;
                         response.IsSunk = ship.IsSunk;
@@ -242,17 +244,6 @@ namespace BattleshipGameAPI.Services
             }
 
             return game;
-        }
-
-        private bool CheckShootingPlayer(Game game, int attackedPlayerId)
-        {
-            var player = game.Players.Single(p => p.Id == attackedPlayerId);
-
-            if (player.IsMyOpponentMove)
-            {
-                return true;
-            }
-            else { return false; }
         }
     }
 }
