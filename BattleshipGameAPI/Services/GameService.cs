@@ -152,16 +152,15 @@ namespace BattleshipGameAPI.Services
             var shootingPlayer = game.Players.First(p => p.Id != request.AttackedPlayerId);
             shootingPlayer.IsMyOpponentMove = true;
 
-            //Nie updatowało attackedPlayer.IsMyOpponentMove i attackedPlayer.IsMyOpponentMove jak nie było w tym miejscu SaveChanges()
-            //Nie było też wtedy odwołań do tych instancji w liniach 218-220
-            await _context.SaveChangesAsync();
-
             if (field.Status == FieldStatus.Empty) 
             {
+                field.Status = FieldStatus.Missed;
                 response.IsHit = false;
                 response.IsSunk = false;
                 response.IsGameOver = game.IsEnded;
+                response.Status = field.Status;
             }
+            await _context.SaveChangesAsync();
 
             if (field.Status == FieldStatus.Filled)
             {
@@ -169,7 +168,7 @@ namespace BattleshipGameAPI.Services
                 field.Status = FieldStatus.Hit;
                 var ship = attackedPlayer.Ships.Single(s => s.Id == field.ShipId);
 
-                //Sprawdzenie czy statek hit and sink
+                //Checking if the ship hit and sink 
                 int hitFieldsCounter = 0;
                 foreach (var shipField in ship.Fields)
                 {
@@ -179,21 +178,24 @@ namespace BattleshipGameAPI.Services
                     }
                 }
 
-                //Statek nie jest zatopiony
+                //The ship is not sunk 
                 if (hitFieldsCounter != ship.Fields.Count())
                 {
                     response.IsHit = true;
                     response.IsSunk = ship.IsSunk;
                     response.IsGameOver = game.IsEnded;
+                    response.Status = field.Status;
+                    response.ShipId = field.ShipId;
+                    response.BoardId = field.BoardId;
                 }
 
-                //Statek jest zatopiony
+                //The ship is sunk
                 if (hitFieldsCounter == ship.Fields.Count())
                 {
                     ship.IsSunk = true;
 
 
-                    //Sprawdzanie czy koniec gry
+                    //Checking whether the game is over 
                     int sunkShipsCounter = 0;
                     foreach (var playerShip in attackedPlayer.Ships)
                     {
@@ -203,15 +205,18 @@ namespace BattleshipGameAPI.Services
                         }
                     }
 
-                    //Kontynuacja gry
+                    //Continuation of the game 
                     if (sunkShipsCounter != attackedPlayer.Ships.Count())
                     {
                         response.IsHit = true;
                         response.IsSunk = ship.IsSunk;
                         response.IsGameOver = game.IsEnded;
+                        response.Status = field.Status;
+                        response.ShipId = field.ShipId;
+                        response.BoardId = field.BoardId;
                     }
 
-                    //Zakończenie gry
+                    //End of the game 
                     if (sunkShipsCounter == attackedPlayer.Ships.Count())
                     {
                         game.IsEnded = true;
@@ -222,6 +227,9 @@ namespace BattleshipGameAPI.Services
                         response.IsHit = true;
                         response.IsSunk = ship.IsSunk;
                         response.IsGameOver = game.IsEnded;
+                        response.Status = field.Status;
+                        response.ShipId = field.ShipId;
+                        response.BoardId = field.BoardId;
                     }
                 }
 
