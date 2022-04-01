@@ -152,7 +152,7 @@ namespace BattleshipGameAPI.Services
             var shootingPlayer = game.Players.First(p => p.Id != request.AttackedPlayerId);
             shootingPlayer.IsMyOpponentMove = true;
 
-            if (field.Status == FieldStatus.Empty) 
+            if (field.Status == FieldStatus.Empty  || field.Status == FieldStatus.Missed) 
             {
                 field.Status = FieldStatus.Missed;
                 response.IsHit = false;
