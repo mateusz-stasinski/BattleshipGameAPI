@@ -151,8 +151,9 @@ namespace BattleshipGameAPI.Services
 
             var shootingPlayer = game.Players.First(p => p.Id != request.AttackedPlayerId);
             shootingPlayer.IsMyOpponentMove = true;
-            
 
+            //Nie updatowało attackedPlayer.IsMyOpponentMove i attackedPlayer.IsMyOpponentMove jak nie było w tym miejscu SaveChanges()
+            //Nie było też wtedy odwołań do tych instancji w liniach 218-220
             await _context.SaveChangesAsync();
 
             if (field.Status == FieldStatus.Empty) 

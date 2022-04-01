@@ -23,5 +23,6 @@ namespace Domain.Entities
         Empty = 0,
         Filled = 1,
         Hit = 2,
+        Missed = 3,
     }
 }
