@@ -85,7 +85,6 @@ namespace Domain.Entities
                             }
                             break;
                         }
-
                         field.ShipId = ship.Id;
                         field.Status = FieldStatus.Filled;
                     }
@@ -109,14 +108,12 @@ namespace Domain.Entities
                             }
                             break;
                         }
-
                         field.ShipId = ship.Id;
                         field.Status = FieldStatus.Filled;
                     }
                 }
                 shipFieldsAmount = board.Fields.Where(f => f.ShipId == ship.Id).ToList().Count();
             }
-
         }
 
         private enum Direction

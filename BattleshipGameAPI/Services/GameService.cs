@@ -18,90 +18,25 @@ namespace BattleshipGameAPI.Services
 
         public async Task<GameDto> ContinueGame(int gameId)
         {
-            var game = await getGame(gameId);
+            var game = await GetGame(gameId);
+
             if (game == null)
             {
                 return null;
             }
 
-            var gameDto = new GameDto();
+            var gameDto = MapGame(game);
 
-            gameDto.Id = gameId;
-            gameDto.IsEnded = game.IsEnded;
-            gameDto.WinnerId = game.WinnerId;
-            gameDto.Players = new List<PlayerDto>();
             foreach (var player in game.Players)
             {
-                var playerDto = new PlayerDto()
-                {
-                    Id = player.Id,
-                    Name = player.Name,
-                    Score = player.Score,
-                    IsWinner = player.IsWinner,
-                    IsMyOpponentMove = player.IsMyOpponentMove,
-                    Board = new BoardDto()
-                    {
-                        Id = player.Board.Id,
-                        PlayerId = player.Id,
-                        X_Size = player.Board.X_Size,
-                        Y_Size = player.Board.Y_Size,
-                        Rows = new List<BoardRow>()
-                    },
-                    Ships = new List<ShipDto>()
-                };
+                var playerDto = MapPlayer(player);
 
-                for (int i = 0; i < player.Board.Y_Size; i++)
-                {
-                    var row = new BoardRow();
-                    row.Fields = new List<FieldDto>();
+                MapBoardForPlayer(player, playerDto);
 
-                    for (int j = 0; j < player.Board.X_Size; j++)
-                    {
-                        var field = player.Board.Fields.Single(f => f.X_Position == j + 1 && f.Y_Position == i + 1);
-
-                        row.Fields.Add(new FieldDto
-                        {
-                            X_Position = field.X_Position,
-                            Y_Position = field.Y_Position,
-                            Status = field.Status,
-                            ShipId = field.ShipId,
-                            BoardId = field.BoardId
-                        });
-                    }
-
-                    playerDto.Board.Rows.Add(row);
-                }
-
-                foreach (var ship in player.Ships)
-                {
-                    var shipDto = new ShipDto()                    
-                    {
-                        Id = ship.Id,
-                        Name = ship.Name,
-                        Length = ship.Length,
-                        PlayerId = ship.PlayerId,
-                        IsSunk = ship.IsSunk,
-                        Fields = new List<FieldDto>()
-                    };
-
-                    foreach (var field in ship.Fields)
-                    {
-                        shipDto.Fields.Add(new FieldDto
-                        {
-                            X_Position = field.X_Position,
-                            Y_Position = field.Y_Position,
-                            Status = field.Status,
-                            ShipId = field.ShipId,
-                            BoardId = field.BoardId
-                        });
-                    }
-
-                    playerDto.Ships.Add(shipDto);
-                }
+                MapShipsForPlayer(player, playerDto);
 
                 gameDto.Players.Add(playerDto);
             }
-
             return gameDto;
         }
 
@@ -134,7 +69,7 @@ namespace BattleshipGameAPI.Services
 
         public async Task<ShootResponse> Shoot(ShootRequest request)
         {
-            var game = await getGame(request.GameId);
+            var game = await GetGame(request.GameId);
 
             var response = new ShootResponse();
 
@@ -238,7 +173,7 @@ namespace BattleshipGameAPI.Services
             return response;
         }
 
-        private async Task<Game> getGame(int gameId)
+        private async Task<Game> GetGame(int gameId)
         {
             var game =  await _context.Games
                 .Include(g => g.Players)
@@ -253,6 +188,92 @@ namespace BattleshipGameAPI.Services
             }
 
             return game;
+        }
+
+        private GameDto MapGame(Game game)
+        {
+            var gameDto = new GameDto();
+            gameDto.Id = game.Id;
+            gameDto.IsEnded = game.IsEnded;
+            gameDto.WinnerId = game.WinnerId;
+            gameDto.Players = new List<PlayerDto>();
+            return gameDto;
+        }
+
+        private PlayerDto MapPlayer(Player player)
+        {
+            var playerDto = new PlayerDto()
+            {
+                Id = player.Id,
+                Name = player.Name,
+                Score = player.Score,
+                IsWinner = player.IsWinner,
+                IsMyOpponentMove = player.IsMyOpponentMove,
+                Board = new BoardDto()
+                {
+                    Id = player.Board.Id,
+                    PlayerId = player.Id,
+                    X_Size = player.Board.X_Size,
+                    Y_Size = player.Board.Y_Size,
+                    Rows = new List<BoardRow>()
+                },
+                Ships = new List<ShipDto>()
+            };
+            return playerDto;
+        }
+
+        private void MapBoardForPlayer(Player player, PlayerDto playerDto)
+        {
+            for (int i = 0; i < player.Board.Y_Size; i++)
+            {
+                var row = new BoardRow();
+                row.Fields = new List<FieldDto>();
+
+                for (int j = 0; j < player.Board.X_Size; j++)
+                {
+                    var field = player.Board.Fields.Single(f => f.X_Position == j + 1 && f.Y_Position == i + 1);
+
+                    row.Fields.Add(new FieldDto
+                    {
+                        X_Position = field.X_Position,
+                        Y_Position = field.Y_Position,
+                        Status = field.Status,
+                        ShipId = field.ShipId,
+                        BoardId = field.BoardId
+                    });
+                }
+                playerDto.Board.Rows.Add(row);
+            }
+        }
+
+        private void MapShipsForPlayer(Player player, PlayerDto playerDto)
+        {
+            foreach (var ship in player.Ships)
+            {
+                var shipDto = new ShipDto()
+                {
+                    Id = ship.Id,
+                    Name = ship.Name,
+                    Length = ship.Length,
+                    PlayerId = ship.PlayerId,
+                    IsSunk = ship.IsSunk,
+                    Fields = new List<FieldDto>()
+                };
+
+                foreach (var field in ship.Fields)
+                {
+                    shipDto.Fields.Add(new FieldDto
+                    {
+                        X_Position = field.X_Position,
+                        Y_Position = field.Y_Position,
+                        Status = field.Status,
+                        ShipId = field.ShipId,
+                        BoardId = field.BoardId
+                    });
+                }
+
+                playerDto.Ships.Add(shipDto);
+            }
         }
     }
 }
