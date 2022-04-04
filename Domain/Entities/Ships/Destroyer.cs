@@ -6,7 +6,6 @@
         {
             Name = "Destroyer";
             Length = 3;
-            //InitializeFields();
         }
     }
 }

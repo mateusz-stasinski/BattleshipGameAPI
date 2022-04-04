@@ -6,7 +6,6 @@
         {
             Name = "Patrol Boat";
             Length = 2;
-            //InitializeFields();
         }
     }
 }

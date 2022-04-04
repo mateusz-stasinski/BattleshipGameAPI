@@ -6,7 +6,6 @@
         {
             Name = "Battleship";
             Length = 4;
-            //InitializeFields();
         }
     }
 }

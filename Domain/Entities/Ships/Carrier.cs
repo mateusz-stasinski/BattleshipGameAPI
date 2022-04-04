@@ -6,7 +6,6 @@
         {
             Name = "Carrier";
             Length = 5;
-            //InitializeFields();
         }
     }
 }
